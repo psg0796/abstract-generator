@@ -1,30 +1,5 @@
 def get_input():
     return {
-        "Organization": {
-            "type": "class",
-            "params": {
-                "members": {
-                    "type": "List[Member]",
-                    "default": "[]"
-                },
-                "name": {
-                    "type": "string"
-                }
-            },
-            "methods": {
-                "get_males": {
-                    "return": "List[Member]"
-                },
-                "add_member": {
-                    "params": {
-                        "member": {
-                            "type": "Member"
-                        }
-                    },
-                    "return": "List[Member]"
-                }
-            }
-        },
         "Sex": {
             "type": "Enum[string]",
             "members": {
@@ -34,23 +9,26 @@ def get_input():
         },
         "Member": {
             "type": "class",
-            "params": {
-                "name": {
-                    "type": "string"
-                },
-                "age": {
-                    "type": "int"
-                },
-                "sex": {
-                    "type": "Sex"
-                }
-            },
             "methods": {
                 "get_name": {
-                    "return": "string"
+                    "returns": "string"
                 },
                 "get_sex": {
-                    "return": "Sex"
+                    "returns": "Sex"
+                }
+            }
+        },
+        "Organization": {
+            "type": "class",
+            "methods": {
+                "get_males": {
+                    "returns": "List[Member]"
+                },
+                "add_member": {
+                    "params": {
+                        "member": "Member"
+                    },
+                    "returns": "List[Member]"
                 }
             }
         }
