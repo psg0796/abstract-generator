@@ -1,6 +1,7 @@
 from typing import Dict
 import os
 from scipy.io.idl import AttrDict
+from generator import Generator
 
 from input import get_input
 
@@ -10,7 +11,7 @@ default_types = {
 }
 
 
-class Generator:
+class PythonGenerator(Generator):
     input_dict: Dict
 
     def __init__(self, input_dict: Dict):
@@ -22,7 +23,7 @@ from enum import Enum
 
 """
 
-    def generate_method(self, method_name, method_schema, indent):
+    def generate_method(self, method_name, method_schema, indent) -> str:
         params = method_schema.get("params")
         returns = method_schema.get("returns", "None")
         param_string = "self"
@@ -35,50 +36,49 @@ from enum import Enum
 {indent}\tpass
 """
 
-    def generate_class(self, name, obj):
-        class_name = name
-        methods = obj.methods
+    def generate_class(self, class_name, class_schema, indent) -> str:
+        class_name = class_name
+        methods = class_schema.methods
         methods_string = ""
         for k, v in methods.items():
-            methods_string += self.generate_method(k, v, "\t")
+            methods_string += self.generate_method(k, v, f"{indent}\t")
         return f"""
-class {class_name}:
-\t__metaclass__ = ABCMeta
+{indent}class {class_name}:
+{indent}\t__metaclass__ = ABCMeta
 {methods_string}
 """
 
-    @staticmethod
-    def get_string_val(type_, val):
+    def get_string_val(self, type_, val) -> str:
         if type_ == "str":
             return f"\'{val}\'"
 
-    def generate_enum(self, name, obj):
-        enum_name = name
-        enum_type = default_types.get(obj.type[5: -1])
-        members: Dict[str, str] = obj.members
+    def generate_enum(self, enum_name, enum_schema, indent) -> str:
+        enum_name = enum_name
+        enum_type = default_types.get(enum_schema.type[5: -1])
+        members: Dict[str, str] = enum_schema.members
         members_string = ""
         for k, v in members.items():
             members_string += f"""
-\t{k}: {enum_type} = {self.get_string_val(enum_type, v)}
+{indent}\t{k}: {enum_type} = {self.get_string_val(enum_type, v)}
 """
         return f"""
-class {enum_name}(Enum):
-{members_string}
+{indent}class {enum_name}(Enum):
+{indent}{members_string}
 """
 
-    def generate(self):
+    def generate(self) -> None:
         for k, obj in self.input_dict.items():
             obj = AttrDict(obj)
             if obj.type == "class":
-                self.output += self.generate_class(k, obj)
+                self.output += self.generate_class(k, obj, "")
             elif obj.type.split("[")[0] == "Enum":
-                self.output += self.generate_enum(k, obj)
+                self.output += self.generate_enum(k, obj, "")
 
         f = open("output/tmp.py", "w")
         f.write(self.output)
         f.close()
-        os.system("black output")
+        os.system("black output/*")
 
 
 if __name__ == '__main__':
-    Generator({}).generate()
+    PythonGenerator({}).generate()
